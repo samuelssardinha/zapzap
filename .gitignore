@@ -6,6 +6,13 @@ __pycache__/
 # C extensions
 *.so
 
+# Arquivos de backup
+*.bk
+
+# Outros arquivos gerados por sistemas operacionais
+.DS_Store
+FETCH_HEAD
+
 # Flatpak
 .flatpak-builder
 .flatpak-repo
