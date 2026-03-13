@@ -1,7 +1,7 @@
 import os
 
 from gettext import gettext as _
-
+from PyQt6.QtWidgets import QBoxLayout
 from PyQt6.QtCore import Qt, QUrl, QEvent, QTimer
 from PyQt6.QtGui import QDesktopServices, QPixmap
 from PyQt6.QtWidgets import (
@@ -38,6 +38,17 @@ class PageCustomizations(QWidget, Ui_PageCustomizations):
         self._configure_signals()
         self._refresh_current_account()
         self._load_scope()
+
+    def resizeEvent(self, event):
+
+        width = self.width()
+
+        if width < 900:
+            self.layoutEditors.setDirection(QBoxLayout.Direction.TopToBottom)
+        else:
+            self.layoutEditors.setDirection(QBoxLayout.Direction.LeftToRight)
+
+        super().resizeEvent(event)
 
     def _configure_asset_tables(self):
         for table in (self.css_files, self.js_files):

@@ -1,119 +1,269 @@
-# ZapZap – WhatsApp Desktop (Community Fork)
+# [ZapZap](https://rtosta.com/zapzap-web/) – WhatsApp Desktop Client for macOS and Windows
+![ZapZap for WhatsApp](share/screenshot/default.png)
 
-Unofficial WhatsApp Desktop application built with **PyQt6 + PyQt6-WebEngine**.
+## 📌 About
 
-This repository is a **community-maintained fork** of the original project created by Rafael Tosta.
+ZapZap brings the WhatsApp experience on Linux closer to that of a native application.  
+Since Meta does not provide a public API for third-party applications, ZapZap is developed as a [Progressive Web Application (PWA)](https://en.wikipedia.org/wiki/Progressive_web_app), built with **PyQt6 + PyQt6-WebEngine**.
 
-Original project:
-https://github.com/rafatosta/zapzap
 
----
+📌 About notifications and icons on Flatpak: 
+See [docs/notifications.md](docs/notifications.md)
 
-# Maintained Fork
-
-Maintainer: **Samuel Silva Sardinha**
-
-This fork focuses on:
-
-• macOS compatibility improvements  
-• stability fixes  
-• spellchecker improvements  
-• additional configuration options  
-• internal architecture improvements  
+📌 Technical documentation:
+See [docs/technical-documentation.md](docs/technical-documentation.md)
 
 ---
 
-# About ZapZap
+## 📥 Download
 
-ZapZap brings the WhatsApp Web experience closer to a native desktop application.
-
-Because Meta does not provide an official API for third-party desktop clients, ZapZap uses **WhatsApp Web inside a Chromium engine (QtWebEngine)**.
-
----
-
-# Disclaimer
-
-This project is **not affiliated with, endorsed by, or sponsored by WhatsApp or Meta**.
-
-WhatsApp is a trademark of **Meta Platforms, Inc.**
-
-This project simply provides a desktop wrapper around **web.whatsapp.com**.
+- **[Flathub](https://flathub.org/apps/details/com.rtosta.zapzap)**  
+- **[AppImage](https://github.com/rafatosta/zapzap/releases/latest/download/ZapZap-x86_64.AppImage)**
 
 ---
 
-# Original Author
+## ✨ Features
 
-Rafael Tosta  
-https://github.com/rafatosta
+ZapZap extends WhatsApp Web with additional features:
+
+### 🎨 Appearance
+- Adaptive **light and dark mode**
+- **Fullscreen mode**
+- Custom **window decorations**
+- **Interface scaling adjustment** (ideal for 2K/4K screens)
+
+### ⚡ Usability
+- **Keyboard shortcuts** for main options
+- Adaptive **system tray icon** (notifies new messages)
+- **Background process** support
+- **Drag-and-drop** functionality
+- Ability to select a **custom folder for downloads**
+- **Temporary folder** for opening files
+
+### 🛠️ Extras
+- **Spellchecker** with language selection via context menu
+- Customizable **system tray icons**
+- Option to choose a **folder for custom dictionaries**
+- Setting to **disable the native file selection dialog** (Hyprland)
+- **Custom CSS/JS** with global + per-account override
+- **Reorganized Settings Panel**
+- Added **Performance section**
+
+### 🧩 Customizations
+- New **Customizations** page in Settings
+- Supports **Global** customization and **Current account** customization
+- Account mode supports **inherit global settings** + optional override
+- Users can:
+  - import `.css` and `.js` files
+  - create and edit CSS/JavaScript files in dialogs
+  - enable/disable each imported CSS/JS file independently
+  - import CSS/JavaScript from any `https://` URL
+  - open customization folders directly
+- Supports many userstyle files (`.user.css`) by extracting WhatsApp-targeted `@-moz-document` blocks
+- Page actions: `Save`, `Save and reload`, `Reload`
+
+Customization files are stored in the app local data path under:
+- `customizations/global/css`
+- `customizations/global/js`
+- `customizations/accounts/<id>/css`
+- `customizations/accounts/<id>/js`
+
+Reserved for future extension support:
+- `customizations/extensions`
 
 ---
 
-# License
+## ⚠️ File upload notice
 
-This project remains licensed under **GPL-3.0**, the same license as the original project.
+### File uploads and filesystem permissions
 
-See the LICENSE file for details.
+To enable **file uploads (documents, images, videos, audio, etc.)** in WhatsApp Web, **ZapZap requires access to the user’s folders**.
 
----
+This is due to **technical limitations of QtWebEngine (Chromium)** in modern environments such as **Wayland** and **sandboxed applications** (for example, Flatpak).  
+Under these conditions, the embedded browser **cannot upload files correctly** without direct access to the filesystem.
 
-# Features
+### What this means in practice
 
-### Appearance
+- Without filesystem access:
+  - file uploads may fail
+  - files may be sent **with no content**
+- With the required permissions granted:
+  - file uploads work correctly
+  - the experience matches that of a regular web browser
 
-• Adaptive light and dark mode  
-• Fullscreen mode  
-• Custom window decorations  
-• Interface scaling adjustment  
+### Recommended permissions
 
-### Usability
+When running in a sandboxed environment (such as Flatpak), it is recommended to grant access to at least:
 
-• Keyboard shortcuts  
-• System tray notifications  
-• Background mode  
-• Drag and drop support  
+- `Documents`
+- `Videos`
+- `Pictures`
+- `Downloads`
 
-### Extras
+These permissions are used **only** to allow the user to select and upload files and are **not** used for automatic file scanning, indexing, or data collection.
 
-• Spellchecker with language selection  
-• Custom CSS/JS support  
-• Custom dictionary folders  
-• Per-account customization support  
+### Changing permissions on Flatpak
 
----
+If ZapZap was installed via **Flatpak**, you can manage filesystem permissions using **Flatseal** (a graphical permission manager for Flatpak apps):
 
-# Development
+👉 https://flathub.org/apps/com.github.tchx84.Flatseal
 
-Requirements:
+Steps:
+1. Install and open **Flatseal**
+2. Select **ZapZap** from the application list
+3. Enable access to the recommended folders (`Documents`, `Videos`, `Pictures`, `Downloads`)
+4. Restart ZapZap
 
-Python 3.9+
+Optional terminal alternative:
 
-Install dependencies:
+```bash
+flatpak override --user --filesystem=home com.rtosta.zapzap
+```
 
+After adjusting these permissions, file uploads, opening PDFs, and drag-and-drop should work normally.
+
+
+# ⚙️ Development
+
+## Requirements
+
+-   **Python 3.9 or higher**
+
+
+
+## Fedora 43 System Dependencies
+
+If `pip install -r requirements.txt` fails due to `dbus-python`:
+
+``` bash
+sudo dnf install -y dbus-devel pkg-config gcc python3-devel
+```
+
+Then:
+
+``` bash
 pip install -r requirements.txt
+```
 
-Run development version:
 
+
+# 🚀 Running ZapZap
+
+``` bash
+python run.py [dev|preview|build] [options]
+```
+
+
+
+## 🔧 Development Mode
+
+Without translations:
+
+``` bash
 python run.py dev
+```
 
----
+With translations:
 
-# Contributions
+``` bash
+python run.py dev --build-translations
+```
 
-Contributions are welcome.
+#### Debugging WebEngine
+- Open DevTools for current account page: `View -> Open DevTools` (`Ctrl+Shift+I`)
 
-Please open a **pull request** or **issue**.
 
----
+## 👀 Preview Mode
 
-# Credits
+Flatpak:
 
-Original project by **Rafael Tosta**
+``` bash
+python run.py preview --flatpak
+```
 
-Fork maintained by **Samuel Silva Sardinha**
+AppImage:
 
----
+``` bash
+python run.py preview --appimage
+```
 
-# Contact
+With translations:
 
-Samuel Silva Sardinha  
-samuel@qualitiinternet.com.br
+``` bash
+python run.py preview --build-translations --flatpak 
+```
+
+
+
+## 📦 Build AppImage
+
+``` bash
+python run.py build --appimage <version>
+```
+
+Example:
+
+``` bash
+python run.py build --appimage 6.0
+```
+
+
+
+## 📦 Build Flatpak Onefile
+
+``` bash
+python run.py build --flatpak-onefile
+```
+
+Output:
+
+    dist/com.rtosta.zapzap.flatpak
+
+
+
+## 📦 Install as Python Module
+
+``` bash
+pip install .
+```
+
+### Uninstall
+
+``` bash
+pip uninstall zapzap
+```
+
+
+
+## 🔧 uv Tool
+
+``` bash
+uv tool install . --with-requirements requirements.txt
+```
+
+## 📦 Packaging
+- **[Flatpak](https://github.com/flathub/com.rtosta.zapzap)**
+- **[AppImage](_scripts/build-appimage.sh)**
+
+## 🌍 Translation
+ZapZap supports translations. If your language file is missing from the [po](/po) folder, submit a pull request or open an [issue](https://github.com/rafatosta/zapzap/issues).
+
+## 🤝 Contributions
+Contributions are welcome!
+Please submit a pull request with any improvements or changes you wish to propose.
+
+## 📜 License
+This project is licensed under the GPL.
+See the LICENSE file for more information.
+
+## 💖 Donations
+**PayPal:** [Donate via PayPal](https://www.paypal.com/donate/?business=E7R4BVR45GRC2&no_recurring=0&item_name=ZapZap+-+Whatsapp+Desktop+for+linux%0AAn+unofficial+WhatsApp+desktop+application+written+in+Pyqt6+%2B+PyQt6-WebEngine.&currency_code=USD) 
+
+**Pix:** [Donate via Pix](https://nubank.com.br/pagar/3c3r2/LS2hiJJKzv) 
+
+**Ko-fi:** [Donate via Ko-fi](https://ko-fi.com/X8X2E1OLG)
+
+## 📬 Contact
+**Maintainer:** Rafael Tosta 
+
+**Email:** [rafa.ecomp@gmail.com](mailto:rafa.ecomp@gmail.com)

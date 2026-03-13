@@ -65,7 +65,7 @@ class PageButton(QPushButton):
         """Configura a interface do botão."""
         self.setFlat(True)
         self.setMinimumSize(QSize(40, 40))
-        self.setMaximumSize(QSize(40, 40))
+        self.setMaximumSize(QSize(10, 40))
         self.setStyleSheet(self.STYLE_NORMAL)
 
     def update_user_icon(self):

@@ -79,7 +79,7 @@ class SysTrayManager:
         self._actions["donation"].triggered.connect(
             lambda: QDesktopServices.openUrl(QUrl(__donationPage__))
         )
-        self._actions["exit"].triggered.connect(main_window.closeEvent)
+        self._actions["exit"].triggered.connect(main_window.quit_app)
 
     def _set_icon(self, icon_type: TrayIcon.Type, number_notifications=0):
         """Atualiza o ícone da bandeja."""

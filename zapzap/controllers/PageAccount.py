@@ -7,31 +7,59 @@ from zapzap.views.ui_page_account import Ui_PageAccount
 
 
 class PageAccount(QWidget, Ui_PageAccount):
+
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.setupUi(self)
 
-        # Inicializa a interface e carrega os usuários
+        # carrega usuários existentes
         self._load_users()
 
-        # Conecta o botão de adicionar novo usuário ao método correspondente
+        # botão novo usuário
         self.btn_new_user.clicked.connect(self._new_user)
 
+    # ------------------------------------------------------
+    # LOAD USERS
+    # ------------------------------------------------------
+
     def _load_users(self):
-        """Carrega os usuários e cria cards correspondentes."""
+        """Carrega usuários e cria os cards correspondentes."""
+
+        # limpa layout primeiro
+        while self.user_list_layout.count():
+
+            item = self.user_list_layout.takeAt(0)
+            widget = item.widget()
+
+            if widget:
+                widget.deleteLater()
+
+        # carrega usuários do modelo
         self.user_list = User.select()
+
         for user in self.user_list:
-            self.user_list_layout.addWidget(CardUser(user))
+
+            card = CardUser(user)
+
+            self.user_list_layout.addWidget(card)
+
+    # ------------------------------------------------------
+    # NEW USER
+    # ------------------------------------------------------
 
     def _new_user(self):
-        """Adiciona um novo usuário, se o limite não for atingido."""
+        """Cria novo usuário se limite não for atingido."""
+
         new_user = User.create_new_user()
 
-        if new_user:
-            # Adiciona o card do novo usuário à interface
-            self.user_list_layout.addWidget(CardUser(new_user))
-
-            # Atualiza o navegador com o novo usuário
-            QApplication.instance().getWindow().browser.add_new_user(new_user)
-        else:
+        if not new_user:
             AlertManager.limit_users(self)
+            return
+
+        # adiciona card na interface
+        card = CardUser(new_user)
+        self.user_list_layout.addWidget(card)
+
+        # atualiza navegador
+        QApplication.instance().getWindow().browser.add_new_user(new_user)

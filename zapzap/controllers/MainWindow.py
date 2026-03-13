@@ -1,129 +1,198 @@
 from PyQt6.QtWidgets import QMainWindow, QApplication
 from PyQt6.QtCore import QByteArray, Qt, QEvent, QBuffer, QTimer, QIODevice
+from PyQt6.QtGui import QImage
+
 from zapzap.controllers.QtoasterDonation import QtoasterDonation
 from zapzap.controllers.Settings import Settings
 from zapzap.controllers.Browser import Browser
 from zapzap.controllers.ShortcutsDialog import ShortcutsDialog
+
 from zapzap.services.AlertManager import AlertManager
 from zapzap.services.SettingsManager import SettingsManager
 from zapzap.services.SysTrayManager import SysTrayManager
 from zapzap.services.ThemeManager import ThemeManager
+
 from zapzap.views.ui_mainwindow import Ui_MainWindow
-from PyQt6.QtGui import QImage
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-    """
-    Classe principal da interface do aplicativo.
-    Controla a janela principal, incluindo o menu e interações com widgets centrais.
-    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.setupUi(self)
 
-        self.is_fullscreen = False  # Controle do estado de tela cheia
-        self.browser = Browser(self)  # Inicialização do navegador
+        self.setMinimumSize(0, 0)
+
+        # largura fixa estilo macOS Settings
+        self.setFixedWidth(1080)
+
+        self.is_fullscreen = False
+        self.browser = Browser(self)
         self.app_settings = None
         self._last_sanitized_key = None
+
+        # flag para encerramento forçado
+        self._force_quit = False
+
         self._setup_ui()
 
         if not SettingsManager.get("notification/donation_message", False):
             QtoasterDonation.showMessage(parent=self)
 
-    def changeEvent(self, event):
-        super().changeEvent(event)
-        # For #509: Use delayed clipboard access to avoid race condition with wayland comp
-        if event.type() == QEvent.Type.ActivationChange and self.isActiveWindow():
-            clipboard = QApplication.clipboard()
-            if not clipboard.image().isNull():
-                QTimer.singleShot(50, self._on_paste)
-
-    def _on_paste(self):
-        clipboard = QApplication.clipboard()
-        image = clipboard.image()
-
-        if image.isNull():
-            return
-
-        # Avoid processing the same image multiple times
-        if image.cacheKey() == self._last_sanitized_key:
-            return
-
-        self._last_sanitized_key = image.cacheKey()
-
-        # Same logic as before but in RAM (privacy+speed)
-        # Converts clipboard image to standardized PNG format that QWebEngine can read
-        buffer = QBuffer()
-        try:
-            buffer.open(QIODevice.OpenModeFlag.ReadWrite)
-            if image.save(buffer, "PNG"):
-                clean_img = QImage()
-                clean_img.loadFromData(buffer.data(), "PNG")
-                QTimer.singleShot(0, lambda img=clean_img.copy()
-                                  : clipboard.setImage(img))
-        finally:
-            buffer.close()
-
-    # === Configuração Inicial ===
+    # =========================================================
+    # Setup inicial
+    # =========================================================
 
     def _setup_ui(self):
-        """Configurações iniciais da interface e conexões de menu."""
+
         self.stackedWidget.addWidget(self.browser)
+
+        self.stackedWidget.currentChanged.connect(self._adjust_window_size)
+
         self._connect_menu_actions()
         self.settings_menubar()
+
         self.set_sidebar_visible(
             SettingsManager.get("system/sidebar", True),
             animated=False,
             persist=False,
         )
 
-    def load_settings(self):
-        """Restaura as configurações salvas da janela e do sistema."""
-        self.restoreGeometry(SettingsManager.get(
-            "main/geometry", QByteArray()))
-        self.restoreState(SettingsManager.get(
-            "main/windowState", QByteArray()))
+    # =========================================================
+    # Resize automático
+    # =========================================================
 
-        # Exibe o SysTray e inicia o ThemeManager
+    def _adjust_window_size(self):
+
+        page = self.stackedWidget.currentWidget()
+
+        if not page:
+            return
+
+        page.adjustSize()
+
+        content_height = page.sizeHint().height()
+
+        screen = self.screen().availableGeometry()
+
+        max_height = screen.height()
+
+        height = min(max(self.height(), content_height), max_height)
+
+        self.resize(self.width(), height)
+
+    # =========================================================
+    # Eventos do sistema
+    # =========================================================
+
+    def changeEvent(self, event):
+
+        super().changeEvent(event)
+
+        if event.type() == QEvent.Type.ActivationChange and self.isActiveWindow():
+
+            clipboard = QApplication.clipboard()
+
+            if not clipboard.image().isNull():
+                QTimer.singleShot(50, self._on_paste)
+
+    def _on_paste(self):
+
+        clipboard = QApplication.clipboard()
+        image = clipboard.image()
+
+        if image.isNull():
+            return
+
+        if image.cacheKey() == self._last_sanitized_key:
+            return
+
+        self._last_sanitized_key = image.cacheKey()
+
+        buffer = QBuffer()
+
+        try:
+
+            buffer.open(QIODevice.OpenModeFlag.ReadWrite)
+
+            if image.save(buffer, "PNG"):
+
+                clean_img = QImage()
+                clean_img.loadFromData(buffer.data(), "PNG")
+
+                QTimer.singleShot(
+                    0,
+                    lambda img=clean_img.copy(): clipboard.setImage(img)
+                )
+
+        finally:
+            buffer.close()
+
+    # =========================================================
+    # Configurações salvas
+    # =========================================================
+
+    def load_settings(self):
+
+        self.restoreGeometry(
+            SettingsManager.get("main/geometry", QByteArray())
+        )
+
+        self.restoreState(
+            SettingsManager.get("main/windowState", QByteArray())
+        )
+
         SysTrayManager.start()
         ThemeManager.start()
 
-    def _setup_toolbar(self):
-        """Ativa o toolBar com o menu de usuários (personalização futura)"""
-        self.toolbar = self.addToolBar("toolBar")
-        # Permitir apenas nas áreas direita e esquerda
-        self.toolbar.setAllowedAreas(
-            Qt.ToolBarArea.LeftToolBarArea | Qt.ToolBarArea.RightToolBarArea)
-        self.toolbar.addWidget(self.browser.frame)
+    # =========================================================
+    # Menu
+    # =========================================================
 
-    # === Conexões de Ações do Menu ===
     def _connect_menu_actions(self):
-        """Conecta ações do menu às funções correspondentes."""
+
         self._connect_file_menu_actions()
         self._connect_view_menu_actions()
         self._connect_help_menu_actions()
 
     def _connect_file_menu_actions(self):
-        """Conectar ações do menu 'Arquivo'."""
+
         self.actionSettings.triggered.connect(self.open_settings)
-        self.actionQuit.triggered.connect(self.closeEvent)
+
+        # Quit agora encerra o app corretamente
+        self.actionQuit.triggered.connect(self.quit_app)
+
         self.actionHide.triggered.connect(self.hide)
+
         self.actionReload.triggered.connect(self.browser.reload_pages)
         self.actionNew_chat.triggered.connect(self.new_chat)
         self.actionBy_phone_number.triggered.connect(self.new_chat_by_phone)
+
         self.actionSobre_o_ZapZap.triggered.connect(self.open_about)
 
     def _connect_view_menu_actions(self):
-        """Conectar ações do menu 'Exibir'."""
+
         self.actionOpen_DevTools.triggered.connect(self.open_devtools)
         self.actionToggle_sidebar.triggered.connect(self.set_sidebar_visible)
+
         self.actionReset_zoom.triggered.connect(self._reset_zoom)
         self.actionToggle_full_screen.triggered.connect(self.toggle_fullscreen)
         self.actionZoom_in.triggered.connect(self._zoom_in)
         self.actionZoom_out.triggered.connect(self._zoom_out)
 
-    def set_sidebar_visible(self, visible: bool, animated: bool = True, persist: bool = True):
+    def _connect_help_menu_actions(self):
+
+        self.actionShortcuts.triggered.connect(
+            lambda: ShortcutsDialog().exec()
+        )
+
+    # =========================================================
+    # Sidebar
+    # =========================================================
+
+    def set_sidebar_visible(self, visible: bool, animated=True, persist=True):
+
         self.browser.set_sidebar_visible(visible, animated=animated)
 
         self.actionToggle_sidebar.blockSignals(True)
@@ -133,136 +202,198 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if persist:
             SettingsManager.set("system/sidebar", visible)
 
-    def _connect_help_menu_actions(self):
-        """Conectar ações do menu 'Ajuda'."""
-        self.actionShortcuts.triggered.connect(
-            lambda: ShortcutsDialog().exec())
+    # =========================================================
+    # Chat
+    # =========================================================
 
-    # === Ações de Menu ===
     def new_chat(self):
-        """Iniciar um novo chat na página atual."""
+
         try:
             self._current_page().page().new_chat()
-        except:
+        except Exception:
             AlertManager.no_active_account()
 
     def new_chat_by_phone(self):
-        """Iniciar um novo chat pelo número de telefone na página atual."""
+
         try:
             self._current_page().page().open_chat_by_number()
-        except:
+        except Exception:
             AlertManager.no_active_account()
 
+    # =========================================================
+    # Zoom
+    # =========================================================
+
     def _reset_zoom(self):
-        """Resetar o fator de zoom da página atual."""
         self._current_page().set_zoom_factor_page()
 
     def _zoom_in(self):
-        """Aumentar o zoom da página atual."""
         self._current_page().set_zoom_factor_page(+0.1)
 
     def _zoom_out(self):
-        """Diminuir o zoom da página atual."""
         self._current_page().set_zoom_factor_page(-0.1)
 
+    # =========================================================
+    # DevTools
+    # =========================================================
+
     def open_devtools(self):
-        """Abrir DevTools da página atual."""
+
         try:
             self._current_page().open_devtools()
         except Exception:
             AlertManager.no_active_account()
 
-    # === Gerenciamento de Tela ===
+    # =========================================================
+    # Página atual
+    # =========================================================
+
     def _current_page(self):
-        """Retorna a página atual do navegador."""
         return self.browser.pages.currentWidget()
 
+    # =========================================================
+    # Fullscreen
+    # =========================================================
+
     def toggle_fullscreen(self):
-        """Alterna entre os modos de tela cheia e janela."""
+
         self.is_fullscreen = not self.is_fullscreen
+
         if self.is_fullscreen:
             self.showFullScreen()
         else:
             self.showNormal()
 
-    # === Configurações de Fechamento ===
-    def closeEvent(self, event):
-        """
-        Evento chamado ao fechar a janela.
-        Salva o estado da janela e realiza a limpeza de recursos.
-        """
+    # =========================================================
+    # Encerrar aplicação
+    # =========================================================
+
+    def quit_app(self):
+
+        self._force_quit = True
+
         self._save_window_state()
 
-        if not SettingsManager.get("system/quit_in_close", False) and event:
+        if self.app_settings:
+            self.close_settings()
+
+        if self.browser:
+            self.browser.close_conversations()
+            self.browser.deleteLater()
+
+        QApplication.instance().quit()
+
+    # =========================================================
+    # Fechamento da janela
+    # =========================================================
+
+    def closeEvent(self, event):
+
+        self._save_window_state()
+
+        if self._force_quit:
+            event.accept()
+            return
+
+        if not SettingsManager.get("system/quit_in_close", False):
             self._prepare_for_background(event)
         else:
-            self._clean_up_and_exit()
+            event.accept()
 
     def _save_window_state(self):
-        """Salvar a geometria e o estado da janela."""
+
         SettingsManager.set("main/geometry", self.saveGeometry())
         SettingsManager.set("main/windowState", self.saveState())
 
     def _prepare_for_background(self, event):
-        """Preparar o app para permanecer em segundo plano."""
 
-        # Fecha o painel de configurações se estiver aberto
         if self.app_settings:
             self.close_settings()
 
         self.browser.close_conversations()
+
         self.hide()
-        event.ignore()
 
-    def _clean_up_and_exit(self):
-        """Limpar recursos e sair do aplicativo."""
-        self.browser.__del__()
-        QApplication.instance().quit()
+        if event:
+            event.ignore()
 
-    # === Controle de Visibilidade da Janela ===
+    # =========================================================
+    # Mostrar / esconder janela
+    # =========================================================
+
     def show_window(self):
-        """Alterna a visibilidade da janela principal."""
+
         if self.isHidden():
+
             if self.is_fullscreen:
                 self.showFullScreen()
             else:
                 self.showNormal()
+
             QApplication.instance().setActiveWindow(self)
+
         elif not self.isActiveWindow():
+
             self.activateWindow()
             self.raise_()
+
         else:
             self.hide()
 
-    # === Funções de Configuração ===
+    # =========================================================
+    # Configurações
+    # =========================================================
+
     def open_settings(self):
-        """Abre o painel de configurações."""
-        self.app_settings = Settings()
+
+        if self.app_settings:
+            return
+
+        self.app_settings = Settings(self)
+
         self.stackedWidget.addWidget(self.app_settings)
         self.stackedWidget.setCurrentWidget(self.app_settings)
 
+        self._adjust_window_size()
+
     def close_settings(self):
-        """Fecha o painel de configurações."""
+
+        if not self.app_settings:
+            return
+
         self.stackedWidget.removeWidget(self.app_settings)
-        self.app_settings.__del__()
+        self.app_settings.deleteLater()
+        self.app_settings = None
 
         self.stackedWidget.setCurrentWidget(self.browser)
 
     def open_about(self):
-        self.open_settings()
-        self.app_settings.open_about()
 
-    # === Eventos externos ===
+        self.open_settings()
+
+        if self.app_settings:
+            self.app_settings.open_about()
+
+    # =========================================================
+    # Notificações externas
+    # =========================================================
+
     def xdgOpenChat(self, url):
-        """Open chat by clicking on a notification"""
+
         try:
             self._current_page().page().xdg_open_chat(url)
-        except:
+        except Exception:
             AlertManager.no_active_account()
 
-    # === Estilo e Interface ===
+    # =========================================================
+    # Menu bar
+    # =========================================================
+
     def settings_menubar(self):
+
         if SettingsManager.get("system/menubar", True):
             self.menubar.setMaximumHeight(2000)
         else:
             self.menubar.setMaximumHeight(0)
+            
+        

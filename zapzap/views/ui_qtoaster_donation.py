@@ -1,4 +1,3 @@
-from gettext import gettext as _
 # Form implementation generated from reading ui file './zapzap/ui/ui_qtoaster_donation.ui'
 #
 # Created by: PyQt6 UI code generator 6.10.2
@@ -63,7 +62,7 @@ class Ui_QtoasterDonation(object):
         self.verticalLayout_3.addWidget(self.labelWelcomeTo)
         self.labelZapZap = QtWidgets.QLabel(parent=self.frame)
         font = QtGui.QFont()
-        font.setFamily("13")
+        font.setFamily("Cantarell")
         font.setPointSize(22)
         font.setBold(False)
         font.setItalic(False)
@@ -132,11 +131,11 @@ class Ui_QtoasterDonation(object):
         QtCore.QMetaObject.connectSlotsByName(QtoasterDonation)
 
     def retranslateUi(self, QtoasterDonation):
-        
-        self.labelWelcomeTo.setText(_("Welcome to"))
-        self.labelZapZap.setText(_("ZapZap"))
-        self.labelVersion.setText(_("Version {id} - {version_type}"))
-        self.donateButton.setText(_("Make a donation"))
+        _translate = QtCore.QCoreApplication.translate
+        self.labelWelcomeTo.setText(_translate("QtoasterDonation", "Welcome to"))
+        self.labelZapZap.setText(_translate("QtoasterDonation", "ZapZap"))
+        self.labelVersion.setText(_translate("QtoasterDonation", "Version {id} - {version_type}"))
+        self.donateButton.setText(_translate("QtoasterDonation", "Make a donation"))
 
 
 if __name__ == "__main__":

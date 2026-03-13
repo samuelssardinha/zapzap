@@ -1,4 +1,3 @@
-from gettext import gettext as _
 # Form implementation generated from reading ui file './zapzap/ui/ui_browser.ui'
 #
 # Created by: PyQt6 UI code generator 6.10.2
@@ -87,11 +86,11 @@ class Ui_Browser(object):
         QtCore.QMetaObject.connectSlotsByName(Browser)
 
     def retranslateUi(self, Browser):
-        
-        self.btn_new_account.setToolTip(_("New account"))
-        self.btn_new_chat_number.setToolTip(_("New conversation by the phone number"))
-        self.btn_new_chat.setToolTip(_("New conversation"))
-        self.btn_open_settings.setToolTip(_("ZapZap Settings"))
+        _translate = QtCore.QCoreApplication.translate
+        self.btn_new_account.setToolTip(_translate("Browser", "New account"))
+        self.btn_new_chat_number.setToolTip(_translate("Browser", "New conversation by the phone number"))
+        self.btn_new_chat.setToolTip(_translate("Browser", "New conversation"))
+        self.btn_open_settings.setToolTip(_translate("Browser", "ZapZap Settings"))
 
 
 if __name__ == "__main__":

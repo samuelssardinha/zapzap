@@ -199,8 +199,8 @@ msgid "About"
 msgstr "Sobre"
 
 #: zapzap/views/ui_page_about.py:114
-msgid "WhatsApp Web for Linux"
-msgstr "WhatsApp Web para Linux"
+msgid "WhatsApp Desktop Client for macOS and Windows"
+msgstr "WhatsApp Desktop Cliente para macOS e Windows"
 
 #: zapzap/views/ui_page_about.py:115
 #, python-brace-format

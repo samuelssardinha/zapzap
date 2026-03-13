@@ -125,7 +125,7 @@ border-color: transparent;</string>
          <widget class="QLabel" name="labelZapZap">
           <property name="font">
            <font>
-            <family>13</family>
+            <family>Cantarell</family>
             <pointsize>22</pointsize>
             <italic>false</italic>
             <bold>false</bold>

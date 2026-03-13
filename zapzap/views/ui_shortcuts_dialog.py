@@ -1,4 +1,3 @@
-from gettext import gettext as _
 # Form implementation generated from reading ui file './zapzap/ui/ui_shortcuts_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.10.2
@@ -58,11 +57,11 @@ class Ui_ShortcutsDialog(object):
         QtCore.QMetaObject.connectSlotsByName(ShortcutsDialog)
 
     def retranslateUi(self, ShortcutsDialog):
-        
-        ShortcutsDialog.setWindowTitle(_("Dialog"))
-        self.label.setText(_("Keyboard shortcuts"))
-        self.groupBox.setTitle(_("WhatsApp Web"))
-        self.groupBox_2.setTitle(_("ZapZap"))
+        _translate = QtCore.QCoreApplication.translate
+        ShortcutsDialog.setWindowTitle(_translate("ShortcutsDialog", "Dialog"))
+        self.label.setText(_translate("ShortcutsDialog", "Keyboard shortcuts"))
+        self.groupBox.setTitle(_translate("ShortcutsDialog", "WhatsApp Web"))
+        self.groupBox_2.setTitle(_translate("ShortcutsDialog", "ZapZap"))
 
 
 if __name__ == "__main__":

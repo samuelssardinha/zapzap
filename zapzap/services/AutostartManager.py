@@ -51,8 +51,8 @@ class AutostartManager:
         desktop_entry_content = """[Desktop Entry]
 Version=1.0
 Name=ZapZap
-Comment[pt_BR]=Whatsapp Desktop para Linux
-Comment=Whatsapp Desktop for Linux
+Comment[pt_BR]=WhatsApp Desktop Client para macOS e Windows
+Comment=WhatsApp Desktop Client for macOS and Windows
 Exec=zapzap %u --hideStart
 Icon=com.rtosta.zapzap
 Type=Application

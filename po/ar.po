@@ -202,7 +202,7 @@ msgid "About"
 msgstr "حول"
 
 #: zapzap/views/ui_page_about.py:114
-msgid "WhatsApp Web for Linux"
+msgid "WhatsApp Desktop Client for macOS and Windows"
 msgstr "واتساب ويب للينكس"
 
 #: zapzap/views/ui_page_about.py:115

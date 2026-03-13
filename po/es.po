@@ -199,7 +199,7 @@ msgid "About"
 msgstr "Acerca de"
 
 #: zapzap/views/ui_page_about.py:114
-msgid "WhatsApp Web for Linux"
+msgid "WhatsApp Desktop Client for macOS and Windows"
 msgstr "WhatsApp Web para Linux"
 
 #: zapzap/views/ui_page_about.py:115
